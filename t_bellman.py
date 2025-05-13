@@ -9,7 +9,7 @@ gamma = 0.9  # 折扣因子
 reward_matrix = np.array([[0, 1], [-1, 0], [0, -1], [1, 0], [0, 0]])
 num_states, num_actions = reward_matrix.shape
 
-# p(s′∣s,a)
+# p(s′∣s,a), 从当前状态s采取动作a转移到未来状态s'的概率
 transition_matrix = np.array([
     [[0.8, 0.1, 0.05, 0.05, 0.0], [0.3, 0.3, 0.2, 0.1, 0.1]],
     [[0.7, 0.1, 0.1, 0.05, 0.05], [0.2, 0.4, 0.2, 0.1, 0.1]],
@@ -32,6 +32,7 @@ for step in range(num_iterations):
     V_old = V.copy()
 
     for s in range(num_states):
+        # Q(s, a): 动作价值函数。在某一个状态采取某一个动作，它有可能得到的回报的一个期望
         Q_values = []
         for a in range(num_actions):
             q_value = 0
