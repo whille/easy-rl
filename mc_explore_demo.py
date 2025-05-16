@@ -43,7 +43,7 @@ def monte_carlo_es(env, num_episodes=100, gamma=0.9):
             G = gamma * G + r_t_plus_1
 
             # 首次访问MC：仅当(s_t,a_t)未在之前出现时更新
-            if (s_t, a_t) not in [(x[0], x[1]) for x in trajectory[:t]]:
+            if (s_t, a_t) in [(x[0], x[1]) for x in trajectory[:t]]:
                 R[(s_t, a_t)].append(G)
                 Q[s_t][a_t] = np.mean(R[(s_t, a_t)])  # 更新Q值为平均回报
                 valid_actions = env.get_valid_actions(s_t)  # 新增方法，获取合法动作
@@ -97,7 +97,7 @@ class GridWorld:
 
 if __name__ == "__main__":
     env = GridWorld()
-    pi, Q = monte_carlo_es(env, num_episodes=4000)
+    pi, Q = monte_carlo_es(env, num_episodes=1000)
 
     print("最优策略（网格坐标→动作）：")
     for s in range(16):
