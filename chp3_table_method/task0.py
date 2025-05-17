@@ -48,15 +48,13 @@ class Config:
         ################################################################################
 
 
-def train(cfg, env, agent, seed):
+def train(cfg, env, agent):
     print('开始训练！')
     print(f'环境:{cfg.env_name}, 算法:{cfg.algo_name}, 设备:{cfg.device}')
     rewards = []  # 记录奖励
-    ma_rewards = []  # 记录滑动平均奖励
-    ma_calc = create_moving_average_calculator()
     for i_ep in range(cfg.train_eps):
         ep_reward = 0  # 记录每个回合的奖励
-        state = env.reset(seed=seed)  # 重置环境,即开始新的回合
+        state = env.reset(seed=cfg.seed)  # 重置环境,即开始新的回合
         while True:
             action = agent.choose_action(state)  # 根据算法选择一个动作
             next_state, reward, done, truncated, info = env.step(action)
@@ -66,23 +64,20 @@ def train(cfg, env, agent, seed):
             if done:
                 break
         rewards.append(ep_reward)
-        ma_rewards.append(ma_calc(ep_reward))
         print("回合数：{}/{}，奖励{:.1f}".format(i_ep + 1, cfg.train_eps, ep_reward))
     print('完成训练！')
-    return rewards, ma_rewards
+    return rewards
 
 
-def test(cfg, env, agent, seed):
+def test(cfg, env, agent):
     print('开始测试！')
     print(f'环境：{cfg.env_name}, 算法：{cfg.algo_name}, 设备：{cfg.device}')
     for item in agent.Q_table.items():
         print(item)
     rewards = []  # 记录所有回合的奖励
-    ma_rewards = []  # 滑动平均的奖励
-    ma_calc = create_moving_average_calculator()
     for i_ep in range(cfg.test_eps):
         ep_reward = 0  # 记录每个episode的reward
-        state = env.reset(seed=seed)  # 重置环境, 重新开一局（即开始新的一个回合）
+        state = env.reset(seed=cfg.seed)  # 重置环境,即开始新的回合
         while True:
             action = agent.predict(state)  # 根据算法选择一个动作
             next_state, reward, done, truncated, info = env.step(action)
@@ -91,21 +86,13 @@ def test(cfg, env, agent, seed):
             if done:
                 break
         rewards.append(ep_reward)
-        ma_rewards.append(ma_calc(ep_reward))
         print(f"回合数：{i_ep+1}/{cfg.test_eps}, 奖励：{ep_reward:.1f}")
     print('完成测试！')
-    return rewards, ma_rewards
+    return rewards
 
 
-def env_agent_config(cfg):
-    '''创建环境和智能体
-    Args:
-        cfg ([type]): [description]
-    Returns:
-        env [type]: 环境
-        agent : 智能体
-    '''
-    env = gym.make(cfg.env_name)
+def env_agent_config(cfg, rmode=None):
+    env = gym.make(cfg.env_name, render_mode=rmode)
     env = CliffWalkingWapper(env)
     state_dim = env.observation_space.n  # 状态维度
     action_dim = env.action_space.n  # 动作维度
@@ -117,14 +104,14 @@ if __name__ == "__main__":
     cfg = Config()
     # 训练
     env, agent = env_agent_config(cfg)
-    rewards, ma_rewards = train(cfg, env, agent, seed=1)
+    rewards = train(cfg, env, agent)
     make_dir(cfg.result_path, cfg.model_path)  # 创建保存结果和模型路径的文件夹
     agent.save(path=cfg.model_path)  # 保存模型
-    save_results(rewards, ma_rewards, tag='train', path=cfg.result_path)  # 保存结果
-    plot_rewards(rewards, ma_rewards, cfg, tag="train")  # 画出结果
+    save_results(rewards, tag='train', path=cfg.result_path)  # 保存结果
+    plot_rewards(rewards, cfg, tag="train")  # 画出结果
     # 测试
-    env, agent = env_agent_config(cfg)
+    env, agent = env_agent_config(cfg, rmode='human')
     agent.load(path=cfg.model_path)  # 导入模型
-    rewards, ma_rewards = test(cfg, env, agent, seed=10)
-    save_results(rewards, ma_rewards, tag='test', path=cfg.result_path)  # 保存结果
-    plot_rewards(rewards, ma_rewards, cfg, tag="test")  # 画出结果
+    rewards = test(cfg, env, agent)
+    save_results(rewards, tag='test', path=cfg.result_path)  # 保存结果
+    plot_rewards(rewards, cfg, tag="test")  # 画出结果

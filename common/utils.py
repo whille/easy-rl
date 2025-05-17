@@ -21,8 +21,7 @@ def chinese_font():
     ''' 设置中文字体，注意需要根据自己电脑情况更改字体路径，否则还是默认的字体
     '''
     try:
-        font = FontProperties(
-        fname='/System/Library/Fonts/STHeiti Light.ttc', size=15) # fname系统字体路径，此处是mac的
+        font = FontProperties(fname='/System/Library/Fonts/STHeiti Light.ttc', size=15)     # fname系统字体路径，此处是mac的
     except:
         font = None
     return font
@@ -43,7 +42,9 @@ def plot_rewards_cn(rewards, ma_rewards, plot_cfg, tag='train'):
     # plt.show()
 
 
-def plot_rewards(rewards, ma_rewards, plot_cfg, tag='train'):
+def plot_rewards(rewards, plot_cfg, tag='train'):
+    ma_calc = create_moving_average_calculator()
+    ma_rewards = [ma_calc(v) for v in rewards]
     sns.set()
     plt.figure()  # 创建一个图形实例，方便同时多画几个图
     plt.title("learning curve on {} of {} for {}".format(
@@ -69,11 +70,10 @@ def plot_losses(losses, algo="DQN", save=True, path='./'):
     plt.show()
 
 
-def save_results(rewards, ma_rewards, tag='train', path='./results'):
+def save_results(rewards, tag='train', path='./results'):
     ''' 保存奖励
     '''
     np.save(path+'{}_rewards.npy'.format(tag), rewards)
-    np.save(path+'{}_ma_rewards.npy'.format(tag), ma_rewards)
     print('结果保存完毕！')
 
 

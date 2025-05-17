@@ -1,14 +1,5 @@
 #!/usr/bin/env python
 # coding=utf-8
-'''
-Author: John
-Email: johnjim0816@gmail.com
-Date: 2020-11-22 23:27:44
-LastEditor: John
-LastEditTime: 2022-02-10 01:25:27
-Discription:
-Environment:
-'''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -64,12 +55,7 @@ class PolicyGradient:
                 running_add = running_add * self.gamma + reward_pool[i]
                 reward_pool[i] = running_add
 
-        # Normalize reward
-        reward_mean = np.mean(reward_pool)
-        reward_std = np.std(reward_pool)
-        for i in range(len(reward_pool)):
-            reward_pool[i] = (reward_pool[i] - reward_mean) / reward_std
-
+        reward_pool = normalize(reward_pool)
         # Gradient Desent
         self.optimizer.zero_grad()
 
@@ -80,8 +66,7 @@ class PolicyGradient:
             state = Variable(torch.from_numpy(state).float())
             probs = self.policy_net(state)
             m = Bernoulli(probs)
-            loss = -m.log_prob(
-                action) * reward  # Negtive score function x reward
+            loss = -m.log_prob(action) * reward  # Negtive score function x reward
             # print(loss)
             loss.backward()
         self.optimizer.step()
@@ -91,3 +76,9 @@ class PolicyGradient:
 
     def load(self, path):
         self.policy_net.load_state_dict(torch.load(path + 'pg_checkpoint.pt'))
+
+
+def normalize(x):
+    x = np.array(x)
+    x = (x - np.mean(x)) / np.std(x)
+    return x
